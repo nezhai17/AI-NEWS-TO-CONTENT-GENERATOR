@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- GLOBAL HELPERS (Phase 3) ---
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- MASTER GATE HELPERS (Phase 3) ---
+    function isOwner(workspaceId) {
+      return isSignedIn() && get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid;
+    }
+    
+    function isMember(workspaceId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/workspaces/$(workspaceId)/members/$(request.auth.uid));
+    }
+
+    // Check if user is a member or owner of the workspace
+    function isWorkspaceMember(workspaceId) {
+      return isSignedIn() && (
+        isOwner(workspaceId) || isMember(workspaceId)
+      );
+    }
+
+    // --- VALIDATION BLUEPRINTS (Pillar 2) ---
+    function isValidWorkspace(data) {
+      return data.keys().hasAll(['name', 'ownerId']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.ownerId == request.auth.uid;
+    }
+
+    // Match blocks (Phase 4)
+
+    // Connection Test (System Health Monitoring)
+    match /_connection_test/{docId} {
+      allow read, write: if true; 
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Workspaces
+    match /workspaces/{workspaceId} {
+      // Access granted if user is the owner OR listed in memberIds
+      // Dual-layer Auth: checks fields on doc (fast) and optionally member subcollection
+      allow read: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        request.auth.uid in resource.data.memberIds
+      );
+
+      allow create: if isSignedIn() && isValidWorkspace(incoming());
+      
+      allow update: if isSignedIn() && (
+                      resource.data.ownerId == request.auth.uid || 
+                      request.auth.uid in resource.data.memberIds
+                    ) && 
+                    isValidWorkspace(incoming()) &&
+                    incoming().ownerId == existing().ownerId;
+      
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      // Subcollections (Phase 4.2)
+      match /{allSubcollections=**} {
+        allow read, write: if isSignedIn() && (
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.get('memberIds', [])
+        );
+      }
+    }
+
+    // Global notifications for user
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Templates (Root Collection)
+    match /templates/{templateId} {
+      allow read, write: if isSignedIn() && (
+        (resource == null && request.resource.data.userId == request.auth.uid) ||
+        (resource != null && resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // 1. Global Safety Net (Phase 4.1) - Moved to end
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

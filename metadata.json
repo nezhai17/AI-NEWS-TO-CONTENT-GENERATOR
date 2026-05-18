@@ -1,0 +1,6 @@
+{
+  "name": "SignalForge AI",
+  "description": "Production-grade AI content engine for marketing teams. Multi-agent workflows, real-time trend detection, and predictive analytics.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

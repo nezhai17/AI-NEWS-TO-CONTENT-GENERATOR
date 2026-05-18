@@ -1,0 +1,199 @@
+{
+  "entities": {
+    "Workspace": {
+      "title": "Workspace",
+      "description": "A shared team environment for collaboration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "settings": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId", "createdAt"]
+    },
+    "TeamMember": {
+      "title": "Team Member",
+      "description": "User membership and roles within a workspace",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "admin", "editor", "viewer"] },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "role", "joinedAt"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "A focused marketing effort within a workspace",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "active", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["workspaceId", "name", "status", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A container for content generation workflow",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "name": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "sourceText": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "processing", "completed", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "status" , "userId", "createdAt", "workspaceId"]
+    },
+    "ContentPiece": {
+      "title": "Content Piece",
+      "description": "Generated content for a specific platform",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string" },
+        "platform": { "type": "string", "enum": ["linkedin", "twitter", "instagram", "tiktok", "newsletter", "youtube", "blog"] },
+        "content": { "type": "string" },
+        "variant": { "type": "string" },
+        "agentWorkflow": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "platform", "content", "createdAt"]
+    },
+    "ScheduledPost": {
+      "title": "Scheduled Post",
+      "description": "Content scheduled for publishing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "contentPieceId": { "type": "string" },
+        "platform": { "type": "string" },
+        "publishAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["scheduled", "published", "failed"] },
+        "externalId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["workspaceId", "contentPieceId", "publishAt", "status", "createdAt"]
+    },
+    "Trend": {
+      "title": "Trend",
+      "description": "Detected trending topics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "topic": { "type": "string" },
+        "source": { "type": "string" },
+        "sentiment": { "type": "number" },
+        "viralityScore": { "type": "number" },
+        "summary": { "type": "string" },
+        "detectedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["topic", "source", "detectedAt"]
+    },
+    "Approval": {
+      "title": "Approval",
+      "description": "A request for human intervention before an autonomous action",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["content", "campaign", "strategy"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "data": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "title", "status", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Activity logging for security and history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "action": { "type": "string" },
+        "resourceType": { "type": "string" },
+        "resourceId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "metadata": { "type": "object" }
+      },
+      "required": ["userId", "action", "timestamp"]
+    },
+    "Template": {
+      "title": "Intelligence Blueprint",
+      "description": "User-defined content structure templates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "platform": { "type": "string" },
+        "structure": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "platform", "structure", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/workspaces/{workspaceId}": {
+      "schema": "Workspace",
+      "description": "Top-level shared workspaces"
+    },
+    "/workspaces/{workspaceId}/members/{memberId}": {
+      "schema": "TeamMember",
+      "description": "Workspace membership"
+    },
+    "/workspaces/{workspaceId}/campaigns/{campaignId}": {
+      "schema": "Campaign",
+      "description": "Campaigns within a workspace"
+    },
+    "/workspaces/{workspaceId}/approvals/{approvalId}": {
+      "schema": "Approval",
+      "description": "Pending autonomous actions"
+    },
+    "/workspaces/{workspaceId}/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Projects within a workspace"
+    },
+    "/workspaces/{workspaceId}/projects/{projectId}/content/{contentId}": {
+      "schema": "ContentPiece",
+      "description": "Content pieces for a project"
+    },
+    "/workspaces/{workspaceId}/calendar/{postId}": {
+      "schema": "ScheduledPost",
+      "description": "Content calendar"
+    },
+    "/workspaces/{workspaceId}/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Audit trails"
+    },
+    "/templates/{templateId}": {
+      "schema": "Template",
+      "description": "User-created blueprints for content synthesis"
+    },
+    "/trends/{trendId}": {
+      "schema": "Trend",
+      "description": "Global trend cache"
+    },
+    "/_connection_test/init": {
+      "schema": "object",
+      "description": "Connection verification document"
+    }
+  }
+}
